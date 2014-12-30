@@ -58,3 +58,20 @@
   shell: 'if grep -q Hadoop /home/vagrant/.ssh/authorized_keys; then echo "public key already added"; else cat {{ ssh_key }}.pub >> /home/vagrant/.ssh/authorized_keys; fi'
   register: ssh_result
   changed_when: ssh_result.stdout.find('public key already added') == -1
+
+- name: install git
+  apt: pkg=git state=present
+  sudo: yes
+
+- name: clone fes repo
+  git: repo=https://github.com/erprice/fes.git dest=/home/vagrant/fes
+
+- name: install redis
+  apt: pkg=redis-server state=present
+  sudo: yes
+
+- name: start redis
+  shell: redis-server &
+  register: redis_result
+  failed_when: redis_result.rc != 0 and ("Address already in use" not in redis_result.stdout)
+  changed_when: redis_result.stdout.find('Server started') and ("Address already in use" not in redis_result.stdout)

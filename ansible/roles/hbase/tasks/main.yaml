@@ -38,10 +38,16 @@
   command: ./bin/start-hbase.sh
            chdir={{ hbase_home_dir }}
   register: hbase_start
-  changed_when: hbase_start.stdout.find('starting master') == -1
+  changed_when: hbase_start.stdout.find("starting master") and ('master running' not in hbase_start.stdout)
+
+- name: create fes tables
+  shell: /home/vagrant/hbase/bin/hbase shell < /home/vagrant/fes/schema
+  register: create_table
+  changed_when: "'Table already exists: fes_event' not in create_table.stdout and 'Table already exists: fes_expiration' not in create_table.stdout"
 
 - name: start Rest server
   command: ./bin/hbase-daemon.sh start rest
            chdir={{ hbase_home_dir }}
   register: rest_start
-  changed_when: rest_start.stdout.find('starting rest') == -1
+  failed_when: (rest_start.rc != 0) and ('rest running' not in rest_start.stdout)
+  changed_when: ('starting rest' in rest_start.stdout) and ('rest running' not in rest_start.stdout)

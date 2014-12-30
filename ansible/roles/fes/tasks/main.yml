@@ -1,0 +1,10 @@
+---
+- name: install fes dependencies
+  shell: python fes/setup.py install
+  register: fes_dependencies
+  changed_when: ('Adding' in fes_dependencies.stdout) and ('to easy-install.pth file' in fes_dependencies.stdout)
+  sudo: yes
+
+- name: start up fes
+  shell: python fes/src/rest_view.py &
+
